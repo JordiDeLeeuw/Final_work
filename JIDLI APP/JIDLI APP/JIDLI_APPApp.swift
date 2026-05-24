@@ -23,11 +23,15 @@ struct JIDLI_APPApp: App {
   // register app delegate for Firebase setup
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
+  @StateObject private var appViewModel = AppViewModel()
 
   var body: some Scene {
     WindowGroup {
         ContentView()
-      
+            .environmentObject(appViewModel)
+            .onAppear {
+                appViewModel.listenToItemsCollection()
+            }
     }
   }
 }
