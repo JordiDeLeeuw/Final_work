@@ -201,80 +201,121 @@ struct ContentView: View {
     }
     
     // MARK: story view
-    func storyView(for idol: String) -> some View {
-        let currentStory = stories[idol] ?? []
-        
-        return VStack(spacing: 30) {
-            HStack {
-                Button("◄ Terug naar Dashboard") {
-                    stopSound()
-                    activeIdol = nil
-                }
-                .foregroundColor(.blue)
-                Spacer()
-                Text("\(idol.capitalized) — Pagina \(currentPageIndex + 1)/18")
-                    .foregroundColor(.gray)
-            }
-            .padding()
+        func storyView(for idol: String) -> some View {
+            let currentStory = stories[idol] ?? []
             
-            if let page = currentStory[safe: currentPageIndex] {
-                Image(page.imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 300)
-                    // tijdelijke fallback placeholder want er staan nog geen echte fotos in assets
-                    .background(Color.black.opacity(0.05))
-                    .cornerRadius(12)
-                
-                Text(page.text)
-                    .font(.title2)
-                    .foregroundColor(.black)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                
-                if idol == "group" {
-                    if currentPageIndex == 14 {
-                        playAudioButton(for: idol)
-                    }
+            return ZStack {
+                // laag 1: de achtergrondafbeelding
+                if currentStory[safe: currentPageIndex] != nil {
+                    GeometryReader { geometry in
+                        Image("\(idol.capitalized)_\(currentPageIndex + 1)")
+                            .resizable()
+                            .scaledToFill()
+                            // afbeeldinge moeten exact te framegrootte zijn van de ipad
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped() // snijd de rest af                    }
+                    .ignoresSafeArea()
                 } else {
-                    if currentPageIndex == 13 {
-                        playAudioButton(for: idol)
-                    }
+                    Color(red: 0.91, green: 0.93, blue: 0.94)
+                        .ignoresSafeArea()
                 }
                 
-            } else {
-                Text("Geen tekst beschikbaar.")
-                    .font(.title2)
-                    .foregroundColor(.black)
-                    .padding()
+                // laag 2: de content-laag (blijft ALTIJD strak binnen de ipad-schermranden)
+                VStack {
+                    // topbar met navigatie
+                    HStack {
+                        Button(action: {
+                            stopSound()
+                            activeIdol = nil
+                        }) {
+                            Text("◄ Terug naar Dashboard")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.blue)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color.white.opacity(0.85))
+                                .cornerRadius(10)
+                        }
+                        
+                        Spacer()
+                        
+                        Text("\(idol.capitalized) — Pagina \(currentPageIndex + 1)/18")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.black)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Color.white.opacity(0.85))
+                            .cornerRadius(10)
+                    }
+                    .padding(.top, 20) 
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                    
+                    // de mocktekst
+                    if let page = currentStory[safe: currentPageIndex] {
+                        Text(page.text)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.black)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 16)
+                            .background(Color.white.opacity(0.85))
+                            .cornerRadius(12)
+                    }
+                    
+                    // play/pause button laadt bovenop de achtergrond
+                    if idol == "group" {
+                        if currentPageIndex == 14 { playAudioButton(for: idol) }
+                    } else {
+                        if currentPageIndex == 13 { playAudioButton(for: idol) }
+                    }
+                    
+                    Spacer()
+                    
+                    // onderbalk met navigatie
+                    HStack {
+                        Button(action: {
+                            if currentPageIndex > 0 {
+                                currentPageIndex -= 1
+                                stopSound()
+                                updateExploredProgress(for: idol)
+                            }
+                        }) {
+                            Text("Vorige")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(currentPageIndex == 0 ? .gray : .blue)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 14)
+                                .background(Color.white.opacity(currentPageIndex == 0 ? 0.5 : 0.85))
+                                .cornerRadius(10)
+                        }
+                        .disabled(currentPageIndex == 0)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            if currentPageIndex < currentStory.count - 1 {
+                                currentPageIndex += 1
+                                stopSound()
+                                updateExploredProgress(for: idol)
+                            }
+                        }) {
+                            Text("Volgende")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(currentPageIndex == currentStory.count - 1 ? .gray : .blue)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 14)
+                                .background(Color.white.opacity(currentPageIndex == currentStory.count - 1 ? 0.5 : 0.85))
+                                .cornerRadius(10)
+                        }
+                        .disabled(currentPageIndex == currentStory.count - 1)
+                    }
+                    .padding(.bottom, 20) // ademruimte vanaf de onderrand
+                    .padding(.horizontal, 20)
+                }
             }
-            
-            Spacer()
-            
-            HStack {
-                Button("Vorige") {
-                    if currentPageIndex > 0 {
-                        currentPageIndex -= 1
-                        stopSound()
-                        updateExploredProgress(for: idol)
-                    }
-                }
-                .disabled(currentPageIndex == 0)
-                
-                Spacer()
-                
-                Button("Volgende") {
-                    if currentPageIndex < currentStory.count - 1 {
-                        currentPageIndex += 1
-                        stopSound()
-                        updateExploredProgress(for: idol)
-                    }
-                }
-                .disabled(currentPageIndex == currentStory.count - 1)
-            }
-            .padding()
         }
-    }
     
     // MARK: audio component
     func playAudioButton(for idol: String) -> some View {
@@ -385,3 +426,4 @@ extension Collection {
 #Preview(traits: .landscapeRight) {
     ContentView()
 }
+
