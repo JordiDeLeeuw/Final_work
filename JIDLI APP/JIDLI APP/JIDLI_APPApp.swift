@@ -26,9 +26,8 @@ struct JIDLI_APPApp: App {
 
   var body: some Scene {
     WindowGroup {
-      NavigationView {
         ContentView()
-      }
+      
     }
   }
 }
