@@ -1,89 +1,310 @@
 import SwiftUI
 
-
 struct DashboardView: View {
-    @ObservedObject var viewModel: AppViewModel
-    let items: [DashboardItem]
+    let items: [JidliItem]
     let onNavigateBack: () -> Void
-
+    let onStartStory: (String) -> Void
+    
+    var onToggleAudio: ((String) -> Void)? = nil
+    
+    let bgColor = Color(red: 0.92, green: 0.93, blue: 0.94)
+        let idolOrder = ["jiroh", "depimi", "lebang"]
+    
+    @State private var playingIdol: String? = nil
+    
+    // helper functie: koppelt de juiste Firebase ID aan de assets
+    func getAssets(for id: String) -> (color: Color, name: String, image: String) {
+        switch id.lowercased() {
+        case "jiroh": return (Color("my_yellow"), "Jiroh_name", "Jiroh_pc")
+        case "depimi": return (Color("my_magenta"), "Depimi_name", "Depimi_pc")
+        case "lebang": return (Color("my_cyan"), "Lebang_name", "Lebang_pc")
+        default: return (Color.black, "", "")
+        }
+    }
+    
     var body: some View {
-        VStack(spacing: 0) {
-            // Back button and title
-            HStack {
-                Button(action: onNavigateBack) {
-                    Image(systemName: "chevron.left")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                        .padding(.vertical, 8)
-                        .padding(.leading)
-                }
-                Spacer()
-                Text("Dashboard")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .padding(.trailing)
-                Spacer()
-                // Empty space to balance the back button
-                Color.clear.frame(width: 44, height: 44)
-            }
-            .background(Color(UIColor.systemBackground))
-
-            Divider()
-
-            List {
-                ForEach(items) { item in
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text(item.title)
-                                .font(.headline)
-                            Spacer()
-                            Text("\(item.explored)/\(item.total)")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        ProgressView(value: item.total == 0 ? 0 : Double(item.explored) / Double(item.total))
-                            .progressViewStyle(LinearProgressViewStyle(tint: .blue))
-
-                        HStack {
-                            Text("Explored: \(Int((Double(item.explored) / Double(max(item.total,1))) * 100))%")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                            Spacer()
-                            if item.explored == item.total && item.total > 0 {
-                                Button(action: { viewModel.toggleAudio(for: item.id) }) {
-                                    Image(systemName: viewModel.playingIdolID == item.id ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                                        .foregroundColor(.blue)
-                                }
-                                .buttonStyle(BorderlessButtonStyle())
+        ZStack {
+            bgColor.ignoresSafeArea()
+            
+            GeometryReader { geometry in
+                HStack(spacing: 0) {
+                    
+                    // linkerkant
+                    VStack(alignment: .leading) {
+                        
+                        // header en uitleg
+                        HStack(alignment: .top) {
+                            VStack(alignment: .center, spacing: -30) {
+                                Text("CHAPTER")
+                                    .font(.system(size: 38, weight: .black))
+                                
+                                Image("chronicles_script")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 220)
+                                    .offset(y: 1)
+                                    .zIndex(1)
+                                
+                                Text("LIST")
+                                    .font(.system(size:38, weight: .black))
                             }
-                            if item.unlocked {
-                                Button("Open Verhaal") {
-                                    viewModel.startStory(id: item.id)
+                            .padding(.leading, 173)
+                            
+                            Spacer()
+                            
+                            Text("Lorem ipsum dolor sit amet consectetur.Felis nunc lectus semper egestas sed nunc.Donec nec quis cursus sit enim. Faucibus nisi sem rhoncus etiam. Ornare porta a eu interdum. Faucibus diam nunc elit quis.")
+                                .font(.custom("Gibson-Regular", size: 16))
+                                .foregroundColor(Color.black)
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 280)
+                                .padding(.top, 10)
+                        }
+                        .padding(.top, 173)
+                        
+                        Spacer()
+                        
+                        // back button + idols
+                        HStack(alignment: .bottom) {
+                            
+                            Button(action: onNavigateBack) {
+                                Image("back_button")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(height: 60)
+                            }
+                            .offset(x:30, y:-12)
+                            
+                            Spacer()
+                            
+                            // spacing tussen de fotokaart elementen van de idols
+                            HStack(spacing: 49) {
+                                ForEach(idolOrder, id: \.self) { idolId in
+                                    IdolCardView(
+                                        idolId: idolId,
+                                        item: items.first(where: { $0.id.lowercased() == idolId }),
+                                        assets: getAssets(for: idolId),
+                                        playingIdol: $playingIdol,
+                                        onStartStory: onStartStory,
+                                        onToggleAudio: onToggleAudio
+                                    )
                                 }
-                                .buttonStyle(.borderedProminent)
                             }
                         }
                     }
-                    .padding(.vertical, 8)
+                    .padding(0)
+                    .frame(width: geometry.size.width * 0.622)
+                    .frame(maxHeight: .infinity)
+                    .zIndex(1)
+                    // rechterkant
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Spacer()
+                        
+                        // groepskaart
+                        GroupCardView(
+                            item: items.first(where: { $0.id.lowercased() == "group" }),
+                            geometry: geometry,
+                            playingIdol: $playingIdol,
+                            onStartStory: onStartStory,
+                            onToggleAudio: onToggleAudio
+                        )
+                    }
+                    .frame(width: geometry.size.width * 0.391)
+                    .frame(maxHeight: .infinity)
                 }
             }
-            .listStyle(PlainListStyle())
         }
     }
 }
 
-struct DashboardView_Previews: PreviewProvider {
-    static let sampleItems = [
-        DashboardItem(id: "1", title: "Story One", explored: 3, total: 5, unlocked: true),
-        DashboardItem(id: "2", title: "Story Two", explored: 5, total: 5, unlocked: true),
-        DashboardItem(id: "3", title: "Story Three", explored: 0, total: 4, unlocked: false)
-    ]
+// idol cards
+struct IdolCardView: View {
+    let idolId: String
+    let item: JidliItem?
+    let assets: (color: Color, name: String, image: String)
+    @Binding var playingIdol: String?
+    let onStartStory: (String) -> Void
+    let onToggleAudio: ((String) -> Void)?
+    
+    @State private var isFullyRevealed: Bool
+    
+    init(idolId: String, item: JidliItem?, assets: (color: Color, name: String, image: String), playingIdol: Binding<String?>, onStartStory: @escaping (String) -> Void, onToggleAudio: ((String) -> Void)?) {
+        self.idolId = idolId
+        self.item = item
+        self.assets = assets
+        self._playingIdol = playingIdol
+        self.onStartStory = onStartStory
+        self.onToggleAudio = onToggleAudio
+        
+        self._isFullyRevealed = State(initialValue: item?.status == "unlocked")
+    }
+    
+    var body: some View {
+        let idolNameCap = idolId.prefix(1).uppercased() + idolId.dropFirst().lowercased()
+        let progress = Int(item?.explored ?? 0.0)
+        let isFullyExplored = progress == 100
+        
+        Button(action: {
+            if isFullyRevealed, let item = item { onStartStory(item.id) }
+        }) {
+            VStack(alignment: .leading, spacing: 9) {
+                
+                // 1. Naam SVG
+                ZStack {
+                    Image(assets.name)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 230)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+                .frame(width: 150, height: 100)
+                .clipped()
+                .offset(x: 0, y: 55)
+                .zIndex(1)
+                
+                // 2. FOTO
+                Image(assets.image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 150, height: 232)
+                    .clipped()
+                    .saturation(isFullyRevealed ? 1.0 : 0.0)
+                    .opacity(isFullyRevealed ? 1.0 : 0.8)
+                    .overlay(alignment: .bottomLeading) {
+                        let isPlaying = (playingIdol == item?.id)
+                        
+                        let svgName: String = {
+                            if !isFullyExplored {
+                                return "\(idolNameCap)_scan"
+                            } else if isPlaying {
+                                return "\(idolNameCap)_pause"
+                            } else {
+                                return "\(idolNameCap)_play"
+                            }
+                        }()
+                        
+                        if isFullyRevealed || !isFullyExplored {
+                            Image(svgName)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 45)
+                                .shadow(color: .white, radius: 0, x: 1, y: 1)
+                                .shadow(color: .white, radius: 0, x: -1, y: -1)
+                                .shadow(color: .white, radius: 0, x: 1, y: -1)
+                                .shadow(color: .white, radius: 0, x: -1, y: 1)
+                                .offset(x: 0, y: 23)
+                                .onTapGesture {
+                                    if isFullyExplored, let id = item?.id {
+                                        playingIdol = (playingIdol == id) ? nil : id
+                                        onToggleAudio?(id)
+                                    }
+                                }
+                        }
+                    }
+                
+                // hoeveel explored
+                HStack {
+                    Spacer()
+                    Text(isFullyRevealed ? "\(progress)% explored" : "locked")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(assets.color)
+                        .opacity(isFullyRevealed ? 1.0 : 0.4)
+                }
+                .frame(width: 150)
+            }
+            .frame(width: 150)
+            .padding(.bottom, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onChange(of: item?.status) { oldValue, newValue in
+            withAnimation(.easeInOut(duration: 0.6)) {
+                isFullyRevealed = (newValue == "unlocked")
+            }
+        }
+    }
+}
 
-    static var previews: some View {
-        DashboardView(
-            viewModel: AppViewModel(),
-            items: sampleItems,
-            onNavigateBack: {}
-        )
+// group card
+struct GroupCardView: View {
+    let item: JidliItem?
+    let geometry: GeometryProxy
+    @Binding var playingIdol: String?
+    let onStartStory: (String) -> Void
+    let onToggleAudio: ((String) -> Void)?
+    
+    @State private var isFullyRevealed: Bool
+    
+    init(item: JidliItem?, geometry: GeometryProxy, playingIdol: Binding<String?>, onStartStory: @escaping (String) -> Void, onToggleAudio: ((String) -> Void)?) {
+        self.item = item
+        self.geometry = geometry
+        self._playingIdol = playingIdol
+        self.onStartStory = onStartStory
+        self.onToggleAudio = onToggleAudio
+        
+        self._isFullyRevealed = State(initialValue: item?.status == "unlocked")
+    }
+    
+    var body: some View {
+        let groupProgress = Int(item?.explored ?? 0.0)
+        let isGroupFullyExplored = groupProgress == 100
+        
+        Button(action: {
+            if isFullyRevealed { onStartStory("group") }
+        }) {
+            Image("group_space_photo")
+                .resizable()
+                .scaledToFill()
+                .frame(width: geometry.size.width * 0.314, height: geometry.size.height * 0.725)
+                .clipped()
+                .saturation(isFullyRevealed ? 1.0 : 0.0)
+                .opacity(isFullyRevealed ? 1.0 : 0.8)
+                .offset(x: 3, y: 0)
+                .overlay(alignment: .bottomLeading) {
+                    let isGroupPlaying = (playingIdol == "group")
+                    
+                    let groupSvgName: String = {
+                        if !isGroupFullyExplored {
+                            return "Group_scan"
+                        } else if isGroupPlaying {
+                            return "Group_pause"
+                        } else {
+                            return "Group_play"
+                        }
+                    }()
+                    
+                    if isFullyRevealed || !isGroupFullyExplored {
+                        Image(groupSvgName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 45)
+                            .shadow(color: .white, radius: 0, x: 1, y: 1)
+                            .shadow(color: .white, radius: 0, x: -1, y: -1)
+                            .shadow(color: .white, radius: 0, x: 1, y: -1)
+                            .shadow(color: .white, radius: 0, x: -1, y: 1)
+                            .offset(x: 0, y: 30)
+                            .onTapGesture {
+                                if isGroupFullyExplored {
+                                    playingIdol = (playingIdol == "group") ? nil : "group"
+                                    onToggleAudio?("group")
+                                }
+                            }
+                    }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
+        .onChange(of: item?.status) { oldValue, newValue in
+            withAnimation(.easeInOut(duration: 0.6)) {
+                isFullyRevealed = (newValue == "unlocked")
+            }
+        }
+        
+        Text(isFullyRevealed ? "\(groupProgress)% explored" : "locked")
+            .font(.system(size: 14, weight: .bold))
+            .foregroundColor(.black)
+            .opacity(isFullyRevealed ? 1.0 : 0.4)
+            .offset(x: 4,y: 2)
+            .padding(.bottom, 10)
+            .padding(.top,14)
     }
 }

@@ -28,9 +28,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0D1F7D0D2FBDF5F4000DF24C /* JIDLI APP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "JIDLI APP.app"; path = "/Users/jordideleeuw/Documents/multimedia/final work/Final_work/JIDLI APP/build/Debug-iphoneos/JIDLI APP.app"; sourceTree = "<absolute>"; };
-		0D1F7D1A2FBDF5F5000DF24C /* JIDLI APPTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = "JIDLI APPTests.xctest"; path = "/Users/jordideleeuw/Documents/multimedia/final work/Final_work/JIDLI APP/build/Debug-iphoneos/JIDLI APP.app/PlugIns/JIDLI APPTests.xctest"; sourceTree = "<absolute>"; };
-		0D1F7D242FBDF5F5000DF24C /* JIDLI APPUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = "JIDLI APPUITests.xctest"; path = "/Users/jordideleeuw/Documents/multimedia/final work/Final_work/JIDLI APP/build/Debug-iphoneos/JIDLI APPUITests-Runner.app/PlugIns/JIDLI APPUITests.xctest"; sourceTree = "<absolute>"; };
+		0D8FAECD2FC3966800592F65 /* JIDLI APP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "JIDLI APP.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DC804BF2FC39ED6006166C9 /* JIDLI APPTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "JIDLI APPTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DC804C02FC39ED6006166C9 /* JIDLI APPUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "JIDLI APPUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -71,6 +71,9 @@
 			isa = PBXGroup;
 			children = (
 				0D1F7D0F2FBDF5F4000DF24C /* JIDLI APP */,
+				0D8FAECD2FC3966800592F65 /* JIDLI APP.app */,
+				0DC804BF2FC39ED6006166C9 /* JIDLI APPTests.xctest */,
+				0DC804C02FC39ED6006166C9 /* JIDLI APPUITests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -97,7 +100,7 @@
 				0D1F7D3C2FBDFE8D000DF24C /* FirebaseFirestore */,
 			);
 			productName = "JIDLI APP";
-			productReference = 0D1F7D0D2FBDF5F4000DF24C /* JIDLI APP.app */;
+			productReference = 0D8FAECD2FC3966800592F65 /* JIDLI APP.app */;
 			productType = "com.apple.product-type.application";
 		};
 		0D1F7D192FBDF5F5000DF24C /* JIDLI APPTests */ = {
@@ -117,7 +120,7 @@
 			packageProductDependencies = (
 			);
 			productName = "JIDLI APPTests";
-			productReference = 0D1F7D1A2FBDF5F5000DF24C /* JIDLI APPTests.xctest */;
+			productReference = 0DC804BF2FC39ED6006166C9 /* JIDLI APPTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		0D1F7D232FBDF5F5000DF24C /* JIDLI APPUITests */ = {
@@ -137,7 +140,7 @@
 			packageProductDependencies = (
 			);
 			productName = "JIDLI APPUITests";
-			productReference = 0D1F7D242FBDF5F5000DF24C /* JIDLI APPUITests.xctest */;
+			productReference = 0DC804C02FC39ED6006166C9 /* JIDLI APPUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */

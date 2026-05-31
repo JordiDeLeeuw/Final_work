@@ -25,6 +25,7 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             VStack {
+                //check welke pagina we op zitten
                 switch viewModel.route {
                 case .title:
                     TitleView(onNext: { viewModel.route = .foreword })
@@ -32,10 +33,18 @@ struct ContentView: View {
                     ForewordView(onBack: { viewModel.route = .title }, onNext: { viewModel.route = .dashboard })
                 case .dashboard:
                     DashboardView(
-                        viewModel: viewModel,
-                        items: viewModel.dashboardItems,
-                        onNavigateBack: { viewModel.route = .foreword }
+                        items: viewModel.items,
+                        onNavigateBack: {
+                            viewModel.route = .foreword
+                        },
+                        onStartStory: { selectedId in
+                            viewModel.startStory(id: selectedId) 
+                        },
+                        onToggleAudio: { soundId in
+                            viewModel.toggleAudio(for: soundId)
+                                }
                     )
+                    
                 case .story:
                     StoryView(viewModel: viewModel, idol: viewModel.selectedIdol)
                 }
@@ -51,4 +60,3 @@ struct ContentView: View {
 #Preview(traits: .landscapeRight) {
     ContentView().environmentObject(AppViewModel())
 }
-

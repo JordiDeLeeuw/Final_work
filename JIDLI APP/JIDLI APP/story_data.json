@@ -1,6 +1,6 @@
 {
   "group": [
-    { "pageNumber": 1, "text": "De groep komt samen in de Hanok kamer...", "imageName": "Group_1" },
+    { "pageNumber": 1, "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sectione temporis, ut egestas purus. Aliquam erat volutpat. Phasellus convallis, diam id varius elementum, elit purus finibus leo, id pretium lorem elementum id.", "imageName": "Group_1" },
     { "pageNumber": 2, "text": "Group - Lorem ipsum dolor sit amet pagina 2.", "imageName": "Group_2" },
     { "pageNumber": 3, "text": "Group - Lorem ipsum dolor sit amet pagina 3.", "imageName": "Group_3" },
     { "pageNumber": 4, "text": "Group - Lorem ipsum dolor sit amet pagina 4.", "imageName": "Group_4" },
