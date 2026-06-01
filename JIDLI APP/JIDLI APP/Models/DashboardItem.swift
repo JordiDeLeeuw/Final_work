@@ -4,12 +4,16 @@
 //
 //  Created by Jordi De Leeuw on 24/05/2026.
 //
+//  datamodel voor de weergave in de UI
+//
+
 import Foundation
 
 struct DashboardItem: Identifiable {
     let id: String
     let title: String
-    let explored: Int      // Aantal gelezen pagina's (klaar voor de UI)
-    let total: Int         // Totaal aantal pagina's (altijd 18)
-    let unlocked: Bool
+    // UI states
+    let explored: Int      // aantal gelezen pagina's
+    let total: Int         //vaste waarde voor het totaal aantal paginas
+    let unlocked: Bool     //bepaalt of een kaart klikbaar is
 }

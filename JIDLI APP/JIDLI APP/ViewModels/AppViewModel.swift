@@ -1,3 +1,12 @@
+//
+//  AppViewModel.swift
+//  JIDLI APP
+//
+//  Created by Jordi De Leeuw on 24/05/2026.
+//
+//  regelt de firebase data, de navigatie states en de audio player
+//
+
 import Foundation
 import SwiftUI
 import Combine
@@ -7,48 +16,51 @@ import Firebase
 import FirebaseFirestore
 #endif
 
-struct StoryPage: Codable, Identifiable, Equatable {
-    let pageNumber: Int
-    let text: String
-    let imageName: String
-    var id: Int { pageNumber }
-
-    enum CodingKeys: String, CodingKey {
-        case pageNumber
-        case text
-        case imageName
-    }
-}
-
 @MainActor
 final class AppViewModel: ObservableObject {
-    // MARK: - Published UI State
+    
+    // MARK: - ui states
+    // @Published betekent: als deze waardes veranderen, past het scherm zich automatisch aan
     @Published var storyPages: [StoryPage] = []
     @Published var currentPageIndex: Int = 0
     @Published var selectedIdol: String = ""
     @Published var playingIdolID: String? = nil
-    @Published var exploredProgress: Double = 0 // 0...1
+    @Published var exploredProgress: Double = 0 // getal tussen 0 en 1 voor de voortgangsbalk
 
     @Published var route: AppRoute = .title
     @Published var items: [JidliItem] = []
 
     @Published var storiesByIdol: [String: [StoryPage]] = [:]
 
+    // de 4 verschillende schermen in de app
     enum AppRoute { case title, foreword, dashboard, story }
-
-    // MARK: - Navigation callbacks previously passed around
-    // These can be used by views but owned here so logic stays centralized.
-    func backToDashboard() {
-        stopSound()
-        selectedIdol = ""
-        route = .dashboard
+    
+    // MARK: - audio setup
+    private var audioPlayer: AVAudioPlayer?
+    
+    init() {
+        // zorgt dat het geluid door de speakers komt, ook als de ipad hardware-matig op 'stil' staat.
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("audio sessie setup mislukt: \(error)")
+        }
     }
 
-    // MARK: - Firestore
+    // MARK: - navigatie
+    func backToDashboard() {
+        stopSound()
+        selectedIdol = "" // reset de keuze
+        route = .dashboard // ga terug naar het overzicht
+    }
+
+    // MARK: - firebase connectie
     #if canImport(Firebase)
     private var listener: ListenerRegistration?
     #endif
 
+    // deze functie blijft constant luisteren naar firebase, als er ergens in de database 'locked' verandert naar 'unlocked' door een NFC scan, ziet de app dat meteen en update hij de schermen.
     func listenToItemsCollection() {
         #if canImport(Firebase)
         let db = Firestore.firestore()
@@ -56,12 +68,12 @@ final class AppViewModel: ObservableObject {
         listener = db.collection("items").addSnapshotListener { [weak self] snapshot, error in
             guard let self else { return }
             if let error = error {
-                print("Firestore listen error: \(error)")
+                print("firestore error: \(error)")
                 return
             }
             guard let docs = snapshot?.documents else { return }
 
-            // Map Firestore items for dashboard
+            // vertaal de data uit de database naar JidliItem structuur
             self.items = docs.map { doc in
                 let data = doc.data()
                 let status = data["status"] as? String ?? "locked"
@@ -70,65 +82,74 @@ final class AppViewModel: ObservableObject {
             }
         }
         #else
-        // Mock items for non-Firebase builds
+        // fake fallback data voor als firebase niet werkt
         self.items = [
             JidliItem(id: "1", status: "unlocked", explored: 0),
-            JidliItem(id: "2", status: "unlocked", explored: 50),
-            JidliItem(id: "3", status: "locked", explored: 0)
+            JidliItem(id: "2", status: "unlocked", explored: 0),
+            JidliItem(id: "3", status: "unlocked", explored: 0)
         ]
         #endif
     }
 
-    // MARK: - Progress
+    // MARK: - voortgang opslaan
+    // berekent hoe ver gebruiker is, en update de view
     func updateExploredProgress(current index: Int) {
         let total = max(storyPages.count, 1)
         let clamped = min(max(index, 0), total - 1)
         currentPageIndex = clamped
         exploredProgress = Double(clamped + 1) / Double(total)
+
+        // bewaar dit in de firebase
         if !selectedIdol.isEmpty { persistExploredProgress(for: selectedIdol) }
     }
 
+    // rekent hoeveel % gebruiker zit en stuur dit naar de database
     func persistExploredProgress(for idol: String) {
-            #if canImport(Firebase)
-            let db = Firestore.firestore()
-            let totalPages = 18.0
-            let currentPage = Double(currentPageIndex + 1)
-            let percentage = (currentPage / totalPages) * 100.0
-            
-            db.collection("items").document(idol).updateData([
-                "explored": percentage
-            ]) { error in
-                if let error = error {
-                    print("Error: \(error.localizedDescription)")
-                }
+        #if canImport(Firebase)
+        let db = Firestore.firestore()
+        let totalPages = 18.0
+        let currentPage = Double(currentPageIndex + 1)
+        let percentage = (currentPage / totalPages) * 100.0
+        
+        db.collection("items").document(idol).updateData([
+            "explored": percentage
+        ]) { error in
+            if let error = error {
+                print("opslaan error: \(error.localizedDescription)")
             }
-            #endif
         }
+        #endif
+    }
 
-    // MARK: - story control methods
+    // MARK: - verhaal data
+    
+    // zoek naar story_data.json file in project en lees alle tekst en fotos
     func loadStoryData() -> [String: [StoryPage]] {
-            // Loads stories.json from bundle; expects a dictionary mapping idol id to pages
-            guard let url = Bundle.main.url(forResource: "story_data", withExtension: "json") else { return [:] }
+        guard let url = Bundle.main.url(forResource: "story_data", withExtension: "json") else { return [:] }
         do {
             let data = try Data(contentsOf: url)
             let decoded = try JSONDecoder().decode([String: [StoryPage]].self, from: data)
             return decoded
         } catch {
-            print("Failed to load stories.json: \(error)")
+            print("json laden mislukt: \(error)")
             return [:]
         }
     }
 
+    // laadt alleen de paginas in van de idol waar gebruiker op heeft geklikt
     func preparePagesForSelectedIdol() {
         if storiesByIdol.isEmpty { storiesByIdol = loadStoryData() }
         storyPages = storiesByIdol[selectedIdol.lowercased()] ?? []
     }
 
+    // opent een verhaal en kijkt in firebase of gebruiker al vooruitgang had
     func startStory(id: String) {
         selectedIdol = id
         preparePagesForSelectedIdol()
+        
         if let savedItem = items.first(where: { $0.id == id }) {
             let totalPages = 18.0
+            // als de gebruiker al % heeft opgebouwd, dan wordt opnieuw berekent welke pagina dat is
             if savedItem.explored > 0 {
                 let calculatedPage = Int(round((savedItem.explored / 100.0) * totalPages))
                 currentPageIndex = max(0, min(calculatedPage - 1, Int(totalPages) - 1))
@@ -140,10 +161,10 @@ final class AppViewModel: ObservableObject {
             currentPageIndex = 0
             updateExploredProgress(current: 0)
         }
-        route = .story
+        route = .story // navigeer naar het story scherm
     }
 
-    // MARK: - Paging
+    // MARK: - pagina controls
     func goToPreviousPage() {
         updateExploredProgress(current: max(currentPageIndex - 1, 0))
     }
@@ -153,18 +174,18 @@ final class AppViewModel: ObservableObject {
         updateExploredProgress(current: next)
     }
 
-    // MARK: - Audio
-    private var audioPlayer: AVAudioPlayer?
-
+    // MARK: - audio speler
+    
+    // checkt of het liedje al speelt. ja = stop, nee = speel af
     func toggleAudio(for idol: String) {
         if playingIdolID == idol { stopSound() } else { playSound(for: idol) }
     }
 
+    // zoekt naar een mp3 bestand met de naam van de idol en start deze
     func playSound(for idol: String) {
-        // Replace with your actual audio resource naming
         let fileName = idol.lowercased()
         guard let url = Bundle.main.url(forResource: fileName, withExtension: "mp3") else {
-            print("Audio file not found for idol: \(idol)")
+            print("audio file niet gevonden: \(idol)")
             return
         }
         do {
@@ -173,7 +194,7 @@ final class AppViewModel: ObservableObject {
             audioPlayer?.play()
             playingIdolID = idol
         } catch {
-            print("Failed to play audio: \(error)")
+            print("play error: \(error)")
         }
     }
 
@@ -183,11 +204,14 @@ final class AppViewModel: ObservableObject {
         playingIdolID = nil
     }
 
-    // MARK: - Helpers used by StoryView
+    // MARK: - view helpers
     func isPlaying(idol: String) -> Bool { playingIdolID == idol }
     func isGroup(idol: String) -> Bool { idol.lowercased() == "group" }
+    
+    // de audio balk verschijnt voor idols op pagina 13, en voor de group op pagina 14
     func playPausePageIndex(for idol: String) -> Int { isGroup(idol: idol) ? 14 : 13 }
 
+    // vertaal database data voor het dashboard
     var dashboardItems: [DashboardItem] {
         let totalPages = 18
         return items.map { item in
@@ -202,4 +226,3 @@ final class AppViewModel: ObservableObject {
         }
     }
 }
-

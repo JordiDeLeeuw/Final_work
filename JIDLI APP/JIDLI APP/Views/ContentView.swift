@@ -4,33 +4,32 @@
 //
 //  Created by Jordi De Leeuw on 20/05/2026.
 //
+//  de hoofdview die bepaalt welk scherm de gebruiker ziet
+//
+
 import SwiftUI
-import FirebaseFirestore
-
-
-
-// Keep the safe-subscript used by StoryView
-extension Collection {
-    subscript (safe index: Index) -> Element? {
-        return indices.contains(index) ? self[index] : nil
-    }
-}
 
 struct ContentView: View {
+    // pakt het centrale brein (appviewmodel) erbij
     @EnvironmentObject var viewModel: AppViewModel
 
     var body: some View {
         ZStack {
-            Color(red: 0.91, green: 0.93, blue: 0.94)
+            Color(red: 0.92, green: 0.93, blue: 0.94)
                 .ignoresSafeArea()
 
             VStack {
-                //check welke pagina we op zitten
+                // switch tussen de verschillende schermen o.b.v de state
                 switch viewModel.route {
                 case .title:
                     TitleView(onNext: { viewModel.route = .foreword })
+                    
                 case .foreword:
-                    ForewordView(onBack: { viewModel.route = .title }, onNext: { viewModel.route = .dashboard })
+                    ForewordView(
+                        onBack: { viewModel.route = .title },
+                        onNext: { viewModel.route = .dashboard }
+                    )
+                    
                 case .dashboard:
                     DashboardView(
                         items: viewModel.items,
@@ -38,11 +37,11 @@ struct ContentView: View {
                             viewModel.route = .foreword
                         },
                         onStartStory: { selectedId in
-                            viewModel.startStory(id: selectedId) 
+                            viewModel.startStory(id: selectedId)
                         },
                         onToggleAudio: { soundId in
                             viewModel.toggleAudio(for: soundId)
-                                }
+                        }
                     )
                     
                 case .story:
@@ -51,9 +50,10 @@ struct ContentView: View {
             }
         }
         .onAppear {
+            // start direct met luisteren naar nfc scans/firebase zodra de app opent
             viewModel.listenToItemsCollection()
         }
-        .statusBar(hidden: true)
+        .statusBar(hidden: true) // verberg de ipad batterij en tijd voor full-screen experience
     }
 }
 

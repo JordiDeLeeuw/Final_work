@@ -1,19 +1,31 @@
+//
+//  StoryView.swift
+//  JIDLI APP
+//
+//  Created by Jordi De Leeuw on 25/05/2026.
+//
+//  het scherm waar gebruiker het verhaal leest en liedjes 1e keer beluisterd.
+//  laadt dynamisch de achtergronden en teksten in.
+//
+
 import SwiftUI
 
 struct StoryView: View {
     @ObservedObject var viewModel: AppViewModel
     let idol: String
     
+    // haal de audio state op
     private var isPlaying: Bool { viewModel.isPlaying(idol: idol) }
     private var playPausePageIndex: Int { viewModel.playPausePageIndex(for: idol) }
     
     var body: some View {
         ZStack {
-            // 1. DE ACHTERGROND (Nu dwingen we de GeometryReader ook de Safe Area te negeren)
+            // MARK: - achtergrond afbeelding
             GeometryReader { proxy in
                 let width = proxy.size.width
                 let height = proxy.size.height
                 
+                // zoekt het juiste beeld op basis van de idol naam en huidige pagina
                 Image("\(idol.capitalized)_\(viewModel.currentPageIndex + 1)")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -21,7 +33,11 @@ struct StoryView: View {
                     .clipped()
             }
             .ignoresSafeArea()
+            
+            // MARK: - interface overlay
             VStack(spacing: 0) {
+                
+                // top bar: terugknop en decoratieve balk
                 HStack(alignment: .top) {
                     Button(action: { viewModel.backToDashboard() }) {
                         Image("Story_logo")
@@ -31,8 +47,9 @@ struct StoryView: View {
                             .offset(y: -5)
                     }
                     .padding(.leading, 20)
-
+                    
                     Spacer()
+                    
                     Image("Story_balk")
                         .resizable()
                         .scaledToFit()
@@ -41,11 +58,13 @@ struct StoryView: View {
                         .offset(x: 107, y: -5)
                 }
                 .padding(.top, 20)
-                                // dynamische text en potentiale audio knop
+                
+                // MARK: - tekst & audio sectie
                 HStack(alignment: .top) {
                     Spacer()
-
+                    
                     VStack(alignment: .center, spacing: 20) {
+                        // haal de tekst op via [safe:] check uit Utils
                         if let page = viewModel.storyPages[safe: viewModel.currentPageIndex] {
                             ScrollView {
                                 Text(page.text)
@@ -59,6 +78,8 @@ struct StoryView: View {
                             .background(Color.black.opacity(0.4))
                             .padding(.top, -18)
                         }
+                        
+                        // knop alleen zichtbaar als gebruiker op specifieke aduio pagina is
                         if viewModel.currentPageIndex == playPausePageIndex {
                             Button(action: { viewModel.toggleAudio(for: idol) }) {
                                 Image(isPlaying ? "Story_pause" : "Story_play")
@@ -70,9 +91,13 @@ struct StoryView: View {
                     }
                     .padding(.trailing, 0)
                 }
-                                Spacer()
+                
+                Spacer()
+                
+                // MARK: - bottom bar: navigatie pijlen
                 HStack {
-                                        if viewModel.currentPageIndex > 0 {
+                    // vorige knop (of een leeg vlak op pagina 1)
+                    if viewModel.currentPageIndex > 0 {
                         Button(action: { viewModel.goToPreviousPage() }) {
                             Image("Story_back")
                                 .resizable()
@@ -80,12 +105,13 @@ struct StoryView: View {
                                 .frame(height: 60)
                         }
                     } else {
+                        // placeholder zodat de 'volgende' knop niet naar links schuift
                         Color.clear.frame(width: 60, height: 60)
                     }
                     
                     Spacer()
                     
-                    // volgende pagina
+                    // volgende knop (verdwijnt op de laatste pagina)
                     if viewModel.currentPageIndex < viewModel.storyPages.count - 1 && viewModel.currentPageIndex < 17 {
                         Button(action: { viewModel.goToNextPage(maxPage: 17) }) {
                             Image("Story_next")

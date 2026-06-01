@@ -1,3 +1,12 @@
+//
+//  DashboardView.swift
+//  JIDLI APP
+//
+//  Created by Jordi De Leeuw on 24/05/2026.
+//
+//  het hoofdmenu, toont de voortgang van de groep, en de losse idols.
+//
+
 import SwiftUI
 
 struct DashboardView: View {
@@ -8,11 +17,11 @@ struct DashboardView: View {
     var onToggleAudio: ((String) -> Void)? = nil
     
     let bgColor = Color(red: 0.92, green: 0.93, blue: 0.94)
-        let idolOrder = ["jiroh", "depimi", "lebang"]
+    let idolOrder = ["jiroh", "depimi", "lebang"]
     
     @State private var playingIdol: String? = nil
     
-    // helper functie: koppelt de juiste Firebase ID aan de assets
+    // koppel de juiste kleuren en beelden aan de specifieke idol
     func getAssets(for id: String) -> (color: Color, name: String, image: String) {
         switch id.lowercased() {
         case "jiroh": return (Color("my_yellow"), "Jiroh_name", "Jiroh_pc")
@@ -29,10 +38,10 @@ struct DashboardView: View {
             GeometryReader { geometry in
                 HStack(spacing: 0) {
                     
-                    // linkerkant
+                    // MARK: - linkerkant (idols)
                     VStack(alignment: .leading) {
                         
-                        // header en uitleg
+                        // header
                         HStack(alignment: .top) {
                             VStack(alignment: .center, spacing: -30) {
                                 Text("CHAPTER")
@@ -49,21 +58,20 @@ struct DashboardView: View {
                                     .font(.system(size:38, weight: .black))
                             }
                             .padding(.leading, 173)
+                            .offset(y:18)
                             
                             Spacer()
                             
-                            Text("Lorem ipsum dolor sit amet consectetur.Felis nunc lectus semper egestas sed nunc.Donec nec quis cursus sit enim. Faucibus nisi sem rhoncus etiam. Ornare porta a eu interdum. Faucibus diam nunc elit quis.")
-                                .font(.custom("Gibson-Regular", size: 16))
-                                .foregroundColor(Color.black)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 280)
+                            // onzichtbare placeholder
+                            Color.clear
+                                .frame(width: 280, height: 100)
                                 .padding(.top, 10)
                         }
                         .padding(.top, 173)
                         
                         Spacer()
                         
-                        // back button + idols
+                        // back button en fotokaarten
                         HStack(alignment: .bottom) {
                             
                             Button(action: onNavigateBack) {
@@ -76,7 +84,6 @@ struct DashboardView: View {
                             
                             Spacer()
                             
-                            // spacing tussen de fotokaart elementen van de idols
                             HStack(spacing: 49) {
                                 ForEach(idolOrder, id: \.self) { idolId in
                                     IdolCardView(
@@ -95,11 +102,11 @@ struct DashboardView: View {
                     .frame(width: geometry.size.width * 0.622)
                     .frame(maxHeight: .infinity)
                     .zIndex(1)
-                    // rechterkant
+                    
+                    // MARK: - rechterkant (groep)
                     VStack(alignment: .trailing, spacing: 0) {
                         Spacer()
                         
-                        // groepskaart
                         GroupCardView(
                             item: items.first(where: { $0.id.lowercased() == "group" }),
                             geometry: geometry,
@@ -116,7 +123,7 @@ struct DashboardView: View {
     }
 }
 
-// idol cards
+// MARK: - losse idol view
 struct IdolCardView: View {
     let idolId: String
     let item: JidliItem?
@@ -144,11 +151,11 @@ struct IdolCardView: View {
         let isFullyExplored = progress == 100
         
         Button(action: {
+            // gebruiker kan pas op de kaart klikken als deze via de nfc tag is unlocked
             if isFullyRevealed, let item = item { onStartStory(item.id) }
         }) {
             VStack(alignment: .leading, spacing: 9) {
                 
-                // 1. Naam SVG
                 ZStack {
                     Image(assets.name)
                         .resizable()
@@ -161,7 +168,6 @@ struct IdolCardView: View {
                 .offset(x: 0, y: 55)
                 .zIndex(1)
                 
-                // 2. FOTO
                 Image(assets.image)
                     .resizable()
                     .scaledToFill()
@@ -187,10 +193,10 @@ struct IdolCardView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 45)
-                                .shadow(color: .white, radius: 0, x: 1, y: 1)
-                                .shadow(color: .white, radius: 0, x: -1, y: -1)
-                                .shadow(color: .white, radius: 0, x: 1, y: -1)
-                                .shadow(color: .white, radius: 0, x: -1, y: 1)
+                                .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: 1, y: 1)
+                                .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: -1, y: -1)
+                                .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: 1, y: -1)
+                                .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: -1, y: 1)
                                 .offset(x: 0, y: 23)
                                 .onTapGesture {
                                     if isFullyExplored, let id = item?.id {
@@ -201,7 +207,6 @@ struct IdolCardView: View {
                         }
                     }
                 
-                // hoeveel explored
                 HStack {
                     Spacer()
                     Text(isFullyRevealed ? "\(progress)% explored" : "locked")
@@ -216,7 +221,8 @@ struct IdolCardView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
-        .onChange(of: item?.status) { oldValue, newValue in
+        .onChange(of: item?.status) { _, newValue in
+            // soepele animatie als de nfc tag gescand wordt
             withAnimation(.easeInOut(duration: 0.6)) {
                 isFullyRevealed = (newValue == "unlocked")
             }
@@ -224,7 +230,7 @@ struct IdolCardView: View {
     }
 }
 
-// group card
+// MARK: - groep view
 struct GroupCardView: View {
     let item: JidliItem?
     let geometry: GeometryProxy
@@ -277,10 +283,10 @@ struct GroupCardView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 45)
-                            .shadow(color: .white, radius: 0, x: 1, y: 1)
-                            .shadow(color: .white, radius: 0, x: -1, y: -1)
-                            .shadow(color: .white, radius: 0, x: 1, y: -1)
-                            .shadow(color: .white, radius: 0, x: -1, y: 1)
+                            .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: 1, y: 1)
+                            .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: -1, y: -1)
+                            .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: 1, y: -1)
+                            .shadow(color: Color(red: 0.92, green: 0.93, blue: 0.94), radius: 0, x: -1, y: 1)
                             .offset(x: 0, y: 30)
                             .onTapGesture {
                                 if isGroupFullyExplored {
@@ -293,7 +299,7 @@ struct GroupCardView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
-        .onChange(of: item?.status) { oldValue, newValue in
+        .onChange(of: item?.status) { _, newValue in
             withAnimation(.easeInOut(duration: 0.6)) {
                 isFullyRevealed = (newValue == "unlocked")
             }
