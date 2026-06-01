@@ -56,6 +56,17 @@ JIDLI is een interactief, fysiek-digitaal K-pop album concept. Door middel van e
   - used in listenToItemsCollection() to listen for changes in the items collection
   - used so the app updates when an NFC scan changes a document from locked to unlocked
 
+## sources - apple shortcuts
+
+[JSON gebruiken in Opdrachten op de iPhone en iPad](https://support.apple.com/nl-be/guide/shortcuts/apd0f2e057df/9.0/ios/26)
+ - used as reference for using JSON/text data inside Apple Shortcuts
+ - used in `SHORTCUTS_SETUP.md` for the text body that updates the Firestore document status
+
+[Method: projects.databases.documents.patch](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/patch?utm_source=organic&rep_location=global)
+ - used as reference for updating a Firestore document through the REST API
+ - used in `SHORTCUTS_SETUP.md` for the PATCH request sent by the NFC automation
+ - used to update the `status` field of a document in the `items` collection from `locked` to `unlocked`
+
 ## ai prompts
  - “Can you help me restructure my existing SwiftUI files into a clearer MVVM structure, without changing the visual design or core functionality?”
  - used for organising the project files into Models, Views, ViewModels and Utils
