@@ -1,5 +1,5 @@
 //
-//  StoryPage.swift
+//  StoryPageItem.swift
 //  JIDLI APP
 //
 //  Created by Jordi De Leeuw on 31/05/2026.
