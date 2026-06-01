@@ -25,16 +25,9 @@ json {   "fields": {     "status": {       "stringValue": "unlocked"     }   } }
 11. Voeg daarna een Get Contents of URL-blok toe.
 
 12. Vul in dit blok de juiste Firestore-URL in. Voor Depimi is dit:
-
 text https://firestore.googleapis.com/v1/projects/jidli-948f1/databases/(default)/documents/items/depimi 
 
-Voor de andere fotokaarten wordt achteraan de naam aangepast naar:
-
-text jiroh 
-
-of
-
-text lebang 
+Voor de andere fotokaarten wordt achteraan de naam aangepast naar: jiroh of lebang 
 
 13. Open de instellingen van het Get Contents of URL-blok.
 
