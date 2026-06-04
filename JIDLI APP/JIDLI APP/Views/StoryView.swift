@@ -73,13 +73,14 @@ struct StoryView: View {
                                     .lineSpacing(6)
                                     .multilineTextAlignment(.leading)
                                     .padding(15)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Color.black.opacity(0.4))
                             }
-                            .frame(width: 320, height: 415)
-                            .background(Color.black.opacity(0.4))
+                            .frame(width: 320)
+                            .frame(maxHeight: 415)
                             .padding(.top, -18)
                         }
-                        
-                        // knop alleen zichtbaar als gebruiker op specifieke aduio pagina is
+                        // knop alleen zichtbaar als gebruiker op specifieke audio pagina is
                         if viewModel.currentPageIndex == playPausePageIndex {
                             Button(action: { viewModel.toggleAudio(for: idol) }) {
                                 Image(isPlaying ? "Story_pause" : "Story_play")
@@ -87,6 +88,8 @@ struct StoryView: View {
                                     .scaledToFit()
                                     .frame(width: 45, height: 45)
                             }
+                            .offset(y: -60)
+                            .padding(.bottom, 10)
                         }
                     }
                     .padding(.trailing, 0)
